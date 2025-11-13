@@ -1,0 +1,53 @@
+package com.example.labclients.lab_clients.application.services;
+
+import com.example.labclients.lab_clients.application.dto.ClientDTO;
+import com.example.labclients.lab_clients.application.mapper.ClientMapper;
+import com.example.labclients.lab_clients.domain.model.Client;
+import com.example.labclients.lab_clients.domain.repository.ClientRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class ClientService {
+    private final ClientRepository clientRepository;
+
+    public ClientService(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
+    }
+
+    public ClientDTO save(ClientDTO client) {
+        if (this.clientRepository.existsByEmail(client.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+        Client clientModel = ClientMapper.toModel(client);
+        return ClientMapper.toDto(this.clientRepository.save(clientModel));
+    }
+
+    public List<ClientDTO> findAll() {
+        return this.clientRepository
+                .findAll()
+                .stream()
+                .map(ClientMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public ClientDTO getClientById(Long id) {
+        return this.clientRepository.findById(id)
+                .map(ClientMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Client not found"));
+    }
+
+    // Métodos con los nombres que usa el controlador
+    public List<ClientDTO> getAllClients() {
+        return findAll();
+    }
+
+    public ClientDTO createClient(ClientDTO client) {
+        return save(client);
+    }
+
+    public void deleteClient(Long id) {
+        // delegar al repositorio
+        this.clientRepository.deleteById(id);
+    }
+}
